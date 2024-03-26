@@ -102,7 +102,7 @@ class PeriodicityAnalyzer:
     ):
         arr = np.array(arr)
         if arr_mask is None: arr_mask = np.zeros_like(arr, dtype=bool)
-        ci, cp, _ = get_cloest_element(arr, center, self.center_tolerant)
+        ci, cp, _ = get_closest_element(arr, center, self.center_tolerant)
         center_nbr_dists = np.abs( arr - cp ).astype(float)
         if np.any(arr_mask): center_nbr_dists[arr_mask] = np.inf
         center_peaks_mask = center_nbr_dists < self.center_tolerant
@@ -158,7 +158,7 @@ class PeriodicityAnalyzer:
     ):
         arr = np.array(arr)
         if arr_mask is None: arr_mask = np.zeros_like(arr, dtype=bool)
-        ci, cp, _ = get_cloest_element(arr, center, self.center_tolerant)
+        ci, cp, _ = get_closest_element(arr, center, self.center_tolerant)
         center_nbr_dists = np.abs( arr - cp )
         if np.any(arr_mask): center_nbr_dists[arr_mask] = np.inf
         center_peaks_mask = center_nbr_dists < self.center_tolerant
@@ -255,11 +255,12 @@ class PeriodicityAnalyzer:
             List[PeakAnalysisDetail]: all the discovered peak family
         """
         arr = np.array(arr)
-        if arr_mask is None: arr_mask = np.zeros_like(arr, dtype=bool)
+        if arr_mask is None:
+            arr_mask = np.zeros_like(arr, dtype=bool)
 
         mask = np.zeros((len(arr), len(arr)), dtype=bool)
         out = []
-        ci, cp, _ = get_cloest_element(arr, center, self.center_tolerant)
+        ci, cp, _ = get_closest_element(arr, center, self.center_tolerant)
         center_nbr_dists = np.abs( arr - cp ).astype(np.float64)
         if np.any(arr_mask): center_nbr_dists[arr_mask] = np.inf
 
@@ -433,7 +434,7 @@ def get_elements_within_tolerant(arr:List[float], search_target:float, tolerant:
             elements.append( (i, e, err) )
     return elements
 
-def get_cloest_element(arr:List[float], search_target:float, tolerant:float):
+def get_closest_element(arr:List[float], search_target:float, tolerant:float):
     elements = get_elements_within_tolerant(arr, search_target, tolerant)
     return elements[ np.argmin( [e[2] for e in elements] ) ]
 

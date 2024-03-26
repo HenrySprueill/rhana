@@ -342,8 +342,8 @@ class IOUMaskTracker:
         new_tracks = []
         for det in detections:
             track_id = self.track_id()
-            new_tracks.append({'bboxes': [det['bbox']], 'region_ids':[det['region_id']], 'image':det['image'], 'area':det['area'], 'start_frame': frame_num, 'track_id' : track_id})
-            region2track[det['region_id']] = track_id
+            new_tracks.append({'bboxes': [det['bbox']], 'region_ids':[det['id']], 'image':det['image'], 'area':det['area'], 'start_frame': frame_num, 'track_id' : track_id})
+            region2track[det['id']] = track_id
             
         self._tracks_active = updated_tracks + new_tracks
 

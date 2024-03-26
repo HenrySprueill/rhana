@@ -227,6 +227,7 @@ class RHEEDMaskDistancePhaser:
         all_percentage = np.zeros( (len(self.rdms), n_labels ) )
 
         for i, rdm, in enumerate(self.rdms):
+            rdm.get_group_intensity()
             all_multihotencoding[i, rdm.cluster_labels_unique] = 1
             all_percentage[i, rdm.cluster_labels_unique] = rdm.group_percent
 
