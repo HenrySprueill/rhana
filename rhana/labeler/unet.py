@@ -187,14 +187,18 @@ class RHEEDTensorImage(TensorImage):
 
 def open_rle_from_row(fn, shape=None, cls=torch.Tensor):
     row = fn
-    masks = []
+    masks = {}
     for c in row.index:
-        rle = row[c]
-        if isinstance(rle, str):
-            masks.append(rle_decode(rle, shape))
+        mask = row[c]
+        if isinstance(mask, str):
+            masks[c] = rle_decode(mask, shape)
         else:
-            masks.append(np.zeros(shape))
-    return cls(np.stack(masks, axis=0).astype(int))
+            if len(mask.shape) == 1:
+                masks[c] = np.reshape(mask, shape)
+            else:
+                masks[c] = mask
+            # masks.append(np.zeros(shape))
+    return cls(np.stack([masks["streaks"], masks["spots"]], axis=0).astype(int))
 
 class RHEEDTensorMask(TensorMask):
     """A data clas that store masks with more than one channel
