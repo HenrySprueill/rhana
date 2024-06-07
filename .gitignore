@@ -141,4 +141,4 @@ old
 other/*
 
 
-*ignore.*
+ext/rhana/*ignore.*
