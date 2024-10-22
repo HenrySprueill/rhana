@@ -5,8 +5,10 @@ from fastai.data.all import *
 from fastai.vision.all import *
 
 from skimage import io as skm_io
+from skimage.util import img_as_ubyte
 
-def bce_logits_floatify(input, target, reduction='mean'):
+
+def bce_logits_floatify(input, target, reduction="mean"):
     """Loss function for the model. See torch.nn.Functional.binary_cross_entropy_with_logits
     for more details.
 
@@ -18,7 +20,9 @@ def bce_logits_floatify(input, target, reduction='mean'):
     Returns:
         torch.Tensor: the BCE loss value
     """
-    return F.binary_cross_entropy_with_logits(input, target.float(), reduction=reduction)
+    return F.binary_cross_entropy_with_logits(
+        input, target.float(), reduction=reduction
+    )
 
 
 # can use sigmoid on the input too, in this case the threshold would be 0.5
@@ -28,7 +32,7 @@ def dice_metric(pred, targs, threshold=0.5):
     Args:
         pred (torch.Tensor): model predictions values
         targs (torch.Tensor): target values
-        threshold (float, optional): threshold for converting the probablistic mask 
+        threshold (float, optional): threshold for converting the probablistic mask
             into binary mask. Defaults to 0.5.
 
     Returns:
@@ -36,7 +40,7 @@ def dice_metric(pred, targs, threshold=0.5):
     """
     pred = (pred > threshold).float()
     targs = targs.float()  # make sure target is float too
-    return 2.0 * (pred*targs).sum() / ((pred+targs).sum() + 1.0)
+    return 2.0 * (pred * targs).sum() / ((pred + targs).sum() + 1.0)
 
 
 def open_rle_from_df(fn, shape=None, cls=torch.Tensor, df=None):
@@ -51,8 +55,8 @@ def open_rle_from_df(fn, shape=None, cls=torch.Tensor, df=None):
     return cls(np.stack(masks, axis=0).astype(int))
 
 
-def rle_encode(img)->str:
-    """"Return run-length encoding string from `img`."
+def rle_encode(img) -> str:
+    """ "Return run-length encoding string from `img`."
 
     Args:
         img (Array): the mask array
@@ -60,14 +64,14 @@ def rle_encode(img)->str:
     Returns:
         str: rle enecoded mask
     """
-    
-    pixels = np.concatenate([[0], img.flatten() , [0]])
+
+    pixels = np.concatenate([[0], img.flatten(), [0]])
     runs = np.where(pixels[1:] != pixels[:-1])[0] + 1
     runs[1::2] -= runs[::2]
-    return ' '.join(str(x) for x in runs)
+    return " ".join(str(x) for x in runs)
 
 
-def rle_decode(mask_rle:str, shape:Union[Tuple, List]):
+def rle_decode(mask_rle: str, shape: Union[Tuple, List]):
     """Return an image array from run-length encoded string `mask_rle` with `shape`.
 
     Args:
@@ -75,17 +79,19 @@ def rle_decode(mask_rle:str, shape:Union[Tuple, List]):
         shape (Union[Tuple, List]): the (h, w) of the binary mask
     Returns:
         Array: a mask with the shape of (h, w)
-    """    
+    """
     s = mask_rle.split()
     starts, lengths = [np.asarray(x, dtype=int) for x in (s[0:][::2], s[1:][::2])]
     starts -= 1
     ends = starts + lengths
-    img = np.zeros(shape[0]*shape[1], dtype=np.uint)
-    for low, up in zip(starts, ends): img[low:up] = 1
+    img = np.zeros(shape[0] * shape[1], dtype=np.uint)
+    for low, up in zip(starts, ends):
+        img[low:up] = 1
     return img.reshape(shape)
 
+
 def rle_encode_arr(img):
-    """"Return run-length encoding list from `img`."
+    """ "Return run-length encoding list from `img`."
 
     Args:
         img (Array): the mask array
@@ -93,8 +99,8 @@ def rle_encode_arr(img):
     Returns:
         list: rle enecoded mask
     """
-    
-    pixels = np.concatenate([[0], img.flatten() , [0]])
+
+    pixels = np.concatenate([[0], img.flatten(), [0]])
     runs = np.where(pixels[1:] != pixels[:-1])[0] + 1
     runs[1::2] -= runs[::2]
     return runs.tolist()
@@ -108,14 +114,16 @@ def rle_decode_arr(mask_rle, shape):
         shape (Union[Tuple, List]): the (h, w) of the binary mask
     Returns:
         Array: a mask with the shape of (h, w)
-    """    
+    """
     s = mask_rle
     starts, lengths = [np.asarray(x, dtype=int) for x in (s[0:][::2], s[1:][::2])]
     starts -= 1
     ends = starts + lengths
-    img = np.zeros(shape[0]*shape[1], dtype=np.uint)
-    for low, up in zip(starts, ends): img[low:up] = 1
+    img = np.zeros(shape[0] * shape[1], dtype=np.uint)
+    for low, up in zip(starts, ends):
+        img[low:up] = 1
     return img.reshape(shape)
+
 
 def open_rheed(fn, cls=torch.Tensor):
     """Open rheed from a image
@@ -127,21 +135,22 @@ def open_rheed(fn, cls=torch.Tensor):
     Returns:
         cls: image data
     """
-    im = skm_io.imread(fn)
-    im = np.tile(im, (3, 1, 1)) / 255 # add 255 to rescale it to 1
+    im = img_as_ubyte(skm_io.imread(fn))
+    im = np.tile(im, (3, 1, 1)) / 255  # add 255 to rescale it to 1
 
     return cls(im)
+
 
 class RHEEDTensorImage(TensorImage):
     """This Class is a data class that allow the pipeline to
     recognize the RHEED image.
     """
-    
+
     def __init__(self, x, chnls_first=True):
         self.chnls_first = chnls_first
 
     @classmethod
-    def create(cls, data:Union[Path, str, ndarray], chnls_first=True):
+    def create(cls, data: Union[Path, str, ndarray], chnls_first=True, crop=None):
         """Create a RHEEDTensorImage object from multiple different sources
 
         Args:
@@ -158,14 +167,16 @@ class RHEEDTensorImage(TensorImage):
             im = open_rheed(fn=data, cls=torch.Tensor)
         elif isinstance(data, pd.Series):
             im = open_rheed(fn=data.name, cls=torch.Tensor)
-        elif isinstance(data, ndarray): 
+        elif isinstance(data, ndarray):
             im = torch.from_numpy(data)
         else:
             im = data
-        
+        if crop is not None:
+            print(im.shape)
+            im = im[:, crop[0]:crop[1], crop[2]:crop[3]]
+            print(im.shape)
         return cls(im, chnls_first=chnls_first)
 
-    
     def show(self, ctx=None):
         """plot the image
 
@@ -176,14 +187,15 @@ class RHEEDTensorImage(TensorImage):
             Matplotlib.pyplot.Axes: plot's axes
         """
         visu_img = self[0, ...]
-                
+
         plt.imshow(visu_img) if ctx is None else ctx.imshow(visu_img)
-        
+
         return ctx
-    
+
     def __repr__(self):
-        
-        return (f'RHEEDTensorImage: {self.shape}')
+
+        return f"RHEEDTensorImage: {self.shape}"
+
 
 def open_rle_from_row(fn, shape=None, cls=torch.Tensor):
     row = fn
@@ -200,18 +212,24 @@ def open_rle_from_row(fn, shape=None, cls=torch.Tensor):
             # masks.append(np.zeros(shape))
     return cls(np.stack([masks["streaks"], masks["spots"]], axis=0).astype(int))
 
+
 class RHEEDTensorMask(TensorMask):
-    """A data clas that store masks with more than one channel
-    """
+    """A data clas that store masks with more than one channel"""
+
     def __init__(self, x, chnls_first=True):
         self.chnls_first = chnls_first
 
     @classmethod
-    def create(cls, data:Union[Path, str, ndarray, pd.Series], chnls_first:bool=True, shape:Union[List, Tuple]=None):
+    def create(
+        cls,
+        data: Union[Path, str, ndarray, pd.Series],
+        chnls_first: bool = True,
+        shape: Union[List, Tuple] = None,
+    ):
         """Create a RHEEDTensorMask object from multiple different sources
 
         Args:
-            data (Path,str,ndarray,pd.Series): data source could be a file path (not recommanded), 
+            data (Path,str,ndarray,pd.Series): data source could be a file path (not recommanded),
             a pd.series with a format that is digestable by open_rle_from_row, or a Array
             chnls_first (bool, optional): see torch.Tensor for more details. Defaults to True.
             shape (Union[List, Tuple], optional): the shape of the mask. Need to be specified if the data
@@ -226,11 +244,11 @@ class RHEEDTensorMask(TensorMask):
             im = open_rle_from_df(fn=data, shape=shape, cls=torch.Tensor, df=df)
         elif isinstance(data, pd.Series):
             im = open_rle_from_row(fn=data, shape=shape, cls=torch.Tensor)
-        elif isinstance(data, ndarray): 
+        elif isinstance(data, ndarray):
             im = torch.from_numpy(data)
         else:
             im = data
-            
+
         return cls(im, chnls_first=chnls_first)
 
     def show(self, chn=0, ctx=None):
@@ -243,10 +261,10 @@ class RHEEDTensorMask(TensorMask):
         Returns:
             matplotlib.pyplot.Axes: plot's axes
         """
-        visu_mask = self[chn, ...]                
+        visu_mask = self[chn, ...]
         plt.imshow(visu_mask) if ctx is None else ctx.imshow(visu_mask)
         return ctx
-    
+
     def __repr__(self):
-        
-        return (f'RHEEDTensorMask: {self.shape}')
+
+        return f"RHEEDTensorMask: {self.shape}"

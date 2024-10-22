@@ -15,24 +15,26 @@ from scipy import ndimage
 
 # from skimage import data
 # from skimage.feature import blob_dog, blob_log, blob_doh
-from skimage.feature import blob_log
-from skimage.color import rgb2gray
-from skimage.filters import gaussian as skim_gaussian
-from skimage.transform import rotate as skim_rotate
-from skimage.restoration import estimate_sigma
-from skimage.measure._regionprops import RegionProperties
-
-from skimage.transform import resize
 from skimage import restoration
+
+from skimage.color import rgb2gray
+from skimage.feature import blob_log
+from skimage.filters import gaussian as skim_gaussian
+from skimage.measure._regionprops import RegionProperties
+from skimage.restoration import estimate_sigma
+from skimage.transform import resize
+from skimage.util import img_as_ubyte
+
+from skimage.transform import rotate as skim_rotate
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
 import plotly.graph_objects as go
 
-from skimage.morphology import reconstruction
 from skimage.measure import label, regionprops
 from skimage.measure import moments
+from skimage.morphology import reconstruction
 
 from typing import List, Dict, Union
 
@@ -208,7 +210,7 @@ class Rheed:
         Returns:
             Rheed: an instantiated rheed obj
         """
-        img = Image.open(path)
+        img = img_as_ubyte(Image.open(path))
         if rotate != 0 :
             img = img.rotate(rotate)
         if crop_box is not None:
