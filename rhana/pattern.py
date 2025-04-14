@@ -1256,7 +1256,7 @@ class RheedMask():
                 x= self.collapses_peaks_ws_flatten[res.family_idx.astype(int)],
                 ymin=0.05*self.rd.pattern.shape[0], ymax=0.95*self.rd.pattern.shape[0],
                 alpha=0.5, 
-                color=plt.cm.Set1.colors[i]
+                color=plt.cm.Set1.colors[i % len(plt.cm.Set1.colors)]
             )
             if show_text:
                 for p in self.collapses_peaks_ws_flatten[res.family_idx.astype(int)]:
